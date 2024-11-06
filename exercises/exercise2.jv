@@ -1,0 +1,53 @@
+pipeline BaumpflanzungenPipeline {
+    block DataExtractor oftype HttpExtractor { url: "https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/stadt-neuss-herbstpflanzung-2023/exports/csv"; }    
+    block BaumpflanzungenTextFileInterpreter oftype TextFileInterpreter {}
+    block BaumpflanzungenCSVInterpreter oftype CSVInterpreter {delimiter: ";";}
+    
+    constraint VogelsangRegex oftype RegexConstraint {
+        regex: /^Vogelsang.*$/;
+    }
+
+    valuetype Vogelsang oftype text {
+        constraints: [
+            VogelsangRegex,
+        ];
+    }
+    
+
+    // {geo-coordinate 1}, {geo-coordinate 2}
+    constraint GeoRegex oftype RegexConstraint {
+        // a geo-coordinate is defined as {1-3 numbers}.{numbers}
+        regex: /^\d{1,3}.\d{2,},[ ]?\d{1,3}.\d{2,}$/;
+    }
+
+    valuetype ID oftype text {
+        constraints: [
+            GeoRegex,
+        ];
+    }
+
+    block BaumpflanzungenTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "lfd_nr" oftype integer,
+            "stadtteil" oftype Vogelsang, //Vogelsang...
+            "standort" oftype text,
+            "baumart_botanisch" oftype text,
+            // "baumart_deutsch" oftype text,
+            "id" oftype ID, // with comma
+            "baumfamilie" oftype text,
+        ];
+    }
+
+    block DatabaseLoader oftype SQLiteLoader {
+        table: "trees"; 
+        file: "./trees.sqlite";
+    }
+
+    DataExtractor
+        ->BaumpflanzungenTextFileInterpreter
+        ->BaumpflanzungenCSVInterpreter
+        ->BaumpflanzungenTableInterpreter
+        ->DatabaseLoader;
+}
+
