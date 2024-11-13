@@ -29,9 +29,9 @@ The Natural Resource Conflict Dataset code whether internal armed conflicts are 
 
 
 ### Datasource2: UCDP Battle-Related Deaths Dataset version 24.1
-* Metadata URL: https://www.prio.org/data/1
-* Data URL: https://ucdp.uu.se/downloads/index.html#battlerelated
-* Data Type: Excel
+* Metadata URL: https://www.prio.org/data/1, https://ucdp.uu.se/downloads/index.html#battlerelated
+* Data URL: https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-241-csv.zip
+* Data Type: zipped CSV
 
 A dataset on battle deaths (number of soldiers and civilians killed in combat) in state-based armed conflicts for the period 1946–2008.
 
