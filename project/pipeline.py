@@ -45,7 +45,7 @@ df[['years', 'months', 'days']] = df.apply(calculate_diff, axis=1)
 df = df.drop(columns=['start_date', 'end_date'])
 
 
-df.to_sql('conflicts', 'sqlite:///../data/conflicts.sqlite', if_exists='replace', index=False)
+df.to_sql('conflicts', 'sqlite:///data/conflicts.sqlite', if_exists='replace', index=False)
 
 # Dataset 2: UCDP Battle-Related Deaths Dataset version 24.1
 
@@ -61,4 +61,4 @@ df = df.drop(columns=['conflict_id', 'dyad_id', 'side_a_id', 'side_a_2nd', 'side
 # select Americas
 df = df.loc[df['region'] == '5']
 
-df.to_sql('deaths', 'sqlite:///../data/deaths.sqlite', if_exists='replace', index=False)
+df.to_sql('deaths', 'sqlite:///data/deaths.sqlite', if_exists='replace', index=False)
