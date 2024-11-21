@@ -1,0 +1,111 @@
+pipeline IncomePipeline {
+    block DataExtractor oftype HttpExtractor { url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx"; }    
+    // block IncomeTextFileInterpreter oftype TextFileInterpreter {}
+    block IncomeXLSXInterpreter oftype XLSXInterpreter {}
+    
+    block IncomeSheetPicker oftype SheetPicker {
+        sheetName: 'Figure S5.1.2';
+    }
+
+    // 3
+    constraint BondIssuanceShareRange oftype RangeConstraint {
+        // regex: /^Vogelsang.*$/;
+        lowerBound:0;
+        lowerBoundInclusive: true;
+
+        upperBound:1;
+        upperBoundInclusive: true;
+    }
+
+    valuetype BondIssuanceShare oftype decimal {
+        constraints: [
+            BondIssuanceShareRange,
+        ];
+    }
+    
+    // 1
+    constraint CountryCodeISORegex oftype RegexConstraint {
+        regex: /^[A-Z]{3}$/;
+    }
+
+    valuetype CountryCode oftype text {
+        constraints: [
+            CountryCodeISORegex,
+        ];
+    }
+
+    // 2
+
+    constraint GDPConstraint on decimal : value >= 0;
+
+    valuetype GDP oftype decimal {
+        constraints: [GDPConstraint];
+    }
+   
+    block NameHeaderWriterP2 oftype CellWriter {
+        at: cell P2;
+        write: [
+            "Country Code"
+        ];
+    }
+
+    block NameHeaderWriterR2S2 oftype CellWriter {
+        at: range R2:S2;
+        write: [
+            "GDP per Capita",
+            "Bond Issuance Share"
+        ];
+    }
+
+    block IncomeDataSelector oftype CellRangeSelector {
+        select: range P2:S45;
+    }
+
+    block BondIssuanceTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCode,
+            // "Economy" oftype text,
+
+            // "GDP per Capita" oftype GDP,
+            "Bond Issuance Share" oftype BondIssuanceShare,
+        ];
+    }
+
+    block GdpPerCapitaTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCode,
+            // "Economy" oftype text,
+
+            "GDP per Capita" oftype GDP,
+            // "Bond Issuance Share" oftype BondIssuanceShare,
+        ];
+    }
+    block BoundDatabaseLoader oftype SQLiteLoader {
+        table: "bondIssuance"; 
+        file: "./bondIssuance.sqlite";
+    }
+
+    block GDPDatabaseLoader oftype SQLiteLoader {
+        table: "gdpPerCapita"; 
+        file: "./gdpPerCapita.sqlite";
+    }
+
+    DataExtractor
+        ->IncomeXLSXInterpreter
+        ->IncomeSheetPicker
+        ->NameHeaderWriterP2
+        ->NameHeaderWriterR2S2
+        ->IncomeDataSelector;
+
+    IncomeDataSelector
+        ->BondIssuanceTableInterpreter
+        ->BoundDatabaseLoader;
+
+    IncomeDataSelector
+        ->GdpPerCapitaTableInterpreter
+        ->GDPDatabaseLoader;
+}
+
+
