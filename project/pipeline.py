@@ -1,6 +1,10 @@
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
+def prevent_errors():
+    df.dropna(how='all',axis=0, inplace=True)
+    df.drop_duplicates(inplace = True)
+
 americas_col = [
     'Bolivia',
     'Paraguay',
@@ -27,6 +31,8 @@ americas_col = [
 df = pd.read_stata(
     'https://cdn.cloud.prio.org/files/ee1003be-b9ed-4fba-8345-8f8501e60177/Natresconfl_v1.dta?inline=true'
 )
+
+prevent_errors()
 
 df['start_date'] = pd.to_datetime(df['epstartdate'])
 df['end_date'] = pd.to_datetime(df['ependdate'])
@@ -55,10 +61,15 @@ df = pd.read_csv(
     sep=','
 )
 
+prevent_errors()
+
 df = df.drop(columns=['conflict_id', 'dyad_id', 'side_a_id', 'side_a_2nd', 'side_b_id', 'side_b_2nd', 'territory_name', 'type_of_conflict', 'battle_location',
                       'gwno_a', 'gwno_a_2nd', 'gwno_b', 'gwno_b_2nd', 'gwno_loc', 'gwno_battle', 'version'])
 
 # select Americas
 df = df.loc[df['region'] == '5']
+
+df = df.rename(columns={'location_inc': 'location'})
+df = df.drop(columns=['region'])
 
 df.to_sql('deaths', 'sqlite:///data/deaths.sqlite', if_exists='replace', index=False)
