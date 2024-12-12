@@ -21,7 +21,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Giving permission
-        run: chmod +x ./project/tests.sh
+        run: chmod +x .
 
       - name: Running tests
         run: bash ./project/tests.sh
