@@ -2,8 +2,7 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 def prevent_errors(df):
-    df.dropna(how='all',axis=0, inplace=True)
-    df.drop_duplicates(inplace = True)
+    return df.dropna(how='all', axis=1).dropna(how='any',axis=0).drop_duplicates()
 
 americas_col = [
     'Bolivia',
@@ -31,7 +30,7 @@ def extract_d1(url='https://cdn.cloud.prio.org/files/ee1003be-b9ed-4fba-8345-8f8
     return pd.read_stata(url)
 
 def transform_d1(df):
-    prevent_errors(df)
+    df = prevent_errors(df)
 
     df['start_date'] = pd.to_datetime(df['epstartdate'])
     df['end_date'] = pd.to_datetime(df['ependdate'])
@@ -58,7 +57,7 @@ def etl_pipeline_d1(url):
     df = transform_d1(df)
     load(df, 'conflicts', 'sqlite:///data/conflicts.sqlite')
 
-etl_pipeline_d1()
+etl_pipeline_d1('https://cdn.cloud.prio.org/files/ee1003be-b9ed-4fba-8345-8f8501e60177/Natresconfl_v1.dta?inline=true')
 
 # Dataset 2: UCDP Battle-Related Deaths Dataset version 24.1
 def extract_d2(zip_url='https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-241-csv.zip'):
@@ -68,7 +67,7 @@ def extract_d2(zip_url='https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-241-csv.z
             sep=','
         )
 def transform_d2(df):
-    prevent_errors(df)
+    df = prevent_errors(df)
 
     df = df.drop(columns=['conflict_id', 'dyad_id', 'side_a_id', 'side_a_2nd', 'side_b_id', 'side_b_2nd', 'territory_name', 'type_of_conflict', 'battle_location',
                         'gwno_a', 'gwno_a_2nd', 'gwno_b', 'gwno_b_2nd', 'gwno_loc', 'gwno_battle', 'version'])
@@ -85,4 +84,4 @@ def etl_pipeline_d2(url):
     df = transform_d2(df)
     load(df, 'deaths', 'sqlite:///data/deaths.sqlite')
 
-etl_pipeline_d2()
+etl_pipeline_d2('https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-241-csv.zip')
