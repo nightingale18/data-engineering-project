@@ -1,0 +1,25 @@
+name: Continuous Integration
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: 
+  push:
+    branches:
+    - main
+    paths:
+    - project/**.sh
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: main
+          # Install python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Running tests
+        run: |
+        ./tests.sh
+     
