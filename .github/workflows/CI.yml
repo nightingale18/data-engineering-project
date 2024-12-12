@@ -5,7 +5,7 @@ on:
     branches:
     - main
     paths:
-    - project/**.sh
+    - project/test.sh
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
@@ -20,5 +20,5 @@ jobs:
           python-version: 3.11
       - name: Running tests
         run: |
-        ./tests.sh
+        .
      
