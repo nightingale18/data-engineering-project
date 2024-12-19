@@ -1,0 +1,78 @@
+pipeline GTFSPipeline {
+
+    DataExtractor
+        ->ZipArchiveInterpreter
+        ->FilePicker
+        ->FileInterpreter
+        ->CSVInterpreter
+        // ->TempColumnDeleter
+        // ->NameHeaderWriterA1E1
+        // ->NameHeaderWriterJ1
+        ->GtfsTableInterpreter
+        // ->CelsiusToFahrenheitTransformerTemp
+        // ->CelsiusToFahrenheitTransformerBatTemp
+        ->DatabaseLoader;
+
+    // Data Extraction - HttpExtractor
+    block DataExtractor oftype HttpExtractor { url: "https://gtfs.rhoenenergie-bus.de/GTFS.zip"; }    
+    block ZipArchiveInterpreter oftype ArchiveInterpreter {archiveType: "zip";}
+    block FilePicker oftype FilePicker {path: "./stops.txt";}
+    block FileInterpreter oftype TextFileInterpreter {}
+    block CSVInterpreter oftype CSVInterpreter { 
+        delimiter: ",";
+        enclosing: '"';
+    }
+
+    constraint StopLatAndLonRange oftype RangeConstraint {
+        // regex: /^Vogelsang.*$/;
+        lowerBound:-90.0;
+        lowerBoundInclusive: true;
+        
+        upperBound:90.0;
+        upperBoundInclusive: true;
+    }
+
+    valuetype StopRange oftype decimal {
+        constraints: [
+            StopLatAndLonRange,
+        ];
+    }
+
+    constraint StopNameGermanLettersRegex oftype RegexConstraint {
+        regex: /^[*A-Za-zäöüÄÖÜ\s][äöüÄÖÜ]+[*A-Za-zäöüÄÖÜ\s]*$/;
+    }
+
+    valuetype GermanStops oftype text {
+        constraints: [
+            StopNameGermanLettersRegex,
+        ];
+    }
+
+    constraint Zone1925 on integer:
+        value == 1925;
+
+    
+    valuetype Zone oftype integer {
+        constraints: [
+            Zone1925,
+        ];
+    }
+
+    block GtfsTableInterpreter oftype TableInterpreter {
+        header: true;
+        columns: [
+            "stop_id" oftype integer, 
+            "stop_name" oftype GermanStops, 
+            "stop_lat" oftype StopRange, 
+            "stop_lon" oftype StopRange, 
+            "zone_id" oftype Zone
+        ];
+    }
+
+    block DatabaseLoader oftype SQLiteLoader {
+        table: "stops"; 
+        file: "./gtfs.sqlite";
+    }
+}
+
+
