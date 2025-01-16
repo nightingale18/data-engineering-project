@@ -30,21 +30,26 @@ def extract_d1(url='https://cdn.cloud.prio.org/files/ee1003be-b9ed-4fba-8345-8f8
     return pd.read_stata(url)
 
 def transform_d1(df):
-    df = prevent_errors(df)
 
     df['start_date'] = pd.to_datetime(df['epstartdate'])
     df['end_date'] = pd.to_datetime(df['ependdate'])
 
 
-    df = df.drop(columns=['acdid', 'sidea', 'sideb', 'ccode', 'res_confl', 'aggrav', 'finance', 'distribution', 'epstartdate', 'ependdate'])
+    df = df.drop(columns=['conflepid', 'acdid', 'sidea', 'sideb', 'ccode', 'res_confl', 'epstartdate', 'ependdate'])
+    
+    df = prevent_errors(df)
+    
     df = df.loc[df['location'].isin(americas_col)]
 
 
     def calculate_diff(row):
         rd = relativedelta(row['end_date'], row['start_date'])
         return pd.Series([rd.years, rd.months, rd.days], index=['years', 'months', 'days'])
-
+    
     df['whole_days'] = (df['end_date'] - df['start_date']).dt.days
+
+    df = df.drop(df.loc[df['whole_days']==0].index)
+
     df[['years', 'months', 'days']] = df.apply(calculate_diff, axis=1)
     df = df.drop(columns=['start_date', 'end_date'])
     return df
@@ -67,11 +72,10 @@ def extract_d2(zip_url='https://ucdp.uu.se/downloads/brd/ucdp-brd-conf-241-csv.z
             sep=','
         )
 def transform_d2(df):
-    df = prevent_errors(df)
 
     df = df.drop(columns=['conflict_id', 'dyad_id', 'side_a_id', 'side_a_2nd', 'side_b_id', 'side_b_2nd', 'territory_name', 'type_of_conflict', 'battle_location',
                         'gwno_a', 'gwno_a_2nd', 'gwno_b', 'gwno_b_2nd', 'gwno_loc', 'gwno_battle', 'version'])
-
+    df = prevent_errors(df)
     # select Americas
     df = df.loc[df['region'] == '5']
 
